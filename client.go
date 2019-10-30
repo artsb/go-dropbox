@@ -98,9 +98,13 @@ func (c *Client) do(req *http.Request) (io.ReadCloser, int64, error) {
 		return nil, 0, err
 	}
 
-	if err := json.NewDecoder(res.Body).Decode(e); err != nil {
+	var errInfo errorInfo
+	if err := json.NewDecoder(res.Body).Decode(&errInfo); err != nil {
 		return nil, 0, err
 	}
+
+	e.Summary = errInfo.Summary
+	e.Tag = errInfo.Error.Tag
 
 	return nil, 0, e
 }
