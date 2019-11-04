@@ -267,7 +267,7 @@ type PermanentlyDeleteInput struct {
 
 // PermanentlyDelete a file or folder and its contents.
 func (c *Files) PermanentlyDelete(in *PermanentlyDeleteInput) (err error) {
-	body, err := c.call("/files/delete_v2", in)
+	body, err := c.call("/files/permanently_delete", in)
 	if err != nil {
 		return
 	}
