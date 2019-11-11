@@ -825,7 +825,7 @@ type GetTemporaryUploadLinkOutput struct {
 }
 
 // GetTemporaryUploadLink returns URL for upload a file smaller than 150MB.
-func (c *Files) GetTemporaryUploadLink(in *UploadInput) (out *GetTemporaryUploadLinkOutput, err error) {
+func (c *Files) GetTemporaryUploadLink(in *GetTemporaryUploadLinkInput) (out *GetTemporaryUploadLinkOutput, err error) {
 	in.CommitInfo.checkMode()
 
 	body, _, err := c.download("/files/get_temporary_upload_link", in, nil)
