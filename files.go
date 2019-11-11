@@ -509,8 +509,8 @@ func (c *Files) SearchContinue(in *SearchContinueInput) (out *SearchOutput, err 
 	return
 }
 
-// UploadInput request input.
-type UploadInput struct {
+// CommitInfo commit info struct
+type CommitInfo struct {
 	Path           string           `json:"path"`
 	Mode           interface{}      `json:"mode,omitempty"`
 	AutoRename     bool             `json:"autorename,omitempty"`
@@ -518,18 +518,10 @@ type UploadInput struct {
 	Mute           bool             `json:"mute,omitempty"`
 	PropertyGroups []*PropertyGroup `json:"property_groups,omitempty"`
 	StrictConflict bool             `json:"strict_conflict,omitempty"`
-	Reader         io.Reader        `json:"-"`
-}
-
-// NewUploadInput creates UploadInput and set default values.
-func NewUploadInput() *UploadInput {
-	return &UploadInput{
-		Mode: WriteModeAdd,
-	}
 }
 
 // SetMode sets write mode.
-func (i *UploadInput) SetMode(mode WriteMode, rev string) {
+func (i *CommitInfo) SetMode(mode WriteMode, rev string) {
 	if mode == WriteModeUpdate {
 		i.Mode = newWriteModeUpdate(rev)
 	} else {
@@ -538,7 +530,10 @@ func (i *UploadInput) SetMode(mode WriteMode, rev string) {
 }
 
 // GetMode gets write mode.
-func (i *UploadInput) GetMode() (mode WriteMode, rev string) {
+func (i *CommitInfo) GetMode() (mode WriteMode, rev string) {
+	// Update Mode if empty
+	i.checkMode()
+
 	switch m := i.Mode.(type) {
 	case *writeModeUpdate:
 		return WriteModeUpdate, m.Rev
@@ -550,9 +545,24 @@ func (i *UploadInput) GetMode() (mode WriteMode, rev string) {
 }
 
 // checkMode checks write mode.
-func (i *UploadInput) checkMode() {
+func (i *CommitInfo) checkMode() {
 	if i.Mode == nil {
 		i.SetMode(WriteModeAdd, "")
+	}
+}
+
+// UploadInput request input.
+type UploadInput struct {
+	CommitInfo
+	Reader io.Reader `json:"-"`
+}
+
+// NewUploadInput creates UploadInput and set default values.
+func NewUploadInput() *UploadInput {
+	return &UploadInput{
+		CommitInfo: CommitInfo{
+			Mode: WriteModeAdd,
+		},
 	}
 }
 
@@ -791,4 +801,39 @@ func FileContentHash(filename string) (string, error) {
 	}
 	defer f.Close()
 	return ContentHash(f)
+}
+
+// GetTemporaryUploadLinkInput request input.
+type GetTemporaryUploadLinkInput struct {
+	CommitInfo CommitInfo `json:"commit_info"`
+	Duration   float64    `json:"duration,omitempty"` // (min=60.0, max=14400.0)
+}
+
+// NewGetTemporaryUploadLinkInput creates GetTemporaryUploadLinkInput and set default values.
+func NewGetTemporaryUploadLinkInput() *GetTemporaryUploadLinkInput {
+	return &GetTemporaryUploadLinkInput{
+		CommitInfo: CommitInfo{
+			Mode: WriteModeAdd,
+		},
+		Duration: 14400,
+	}
+}
+
+// GetTemporaryUploadLinkOutput request output.
+type GetTemporaryUploadLinkOutput struct {
+	Link string `json:"link"`
+}
+
+// GetTemporaryUploadLink returns URL for upload a file smaller than 150MB.
+func (c *Files) GetTemporaryUploadLink(in *UploadInput) (out *GetTemporaryUploadLinkOutput, err error) {
+	in.CommitInfo.checkMode()
+
+	body, _, err := c.download("/files/get_temporary_upload_link", in, nil)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
 }
