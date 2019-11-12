@@ -828,7 +828,7 @@ type GetTemporaryUploadLinkOutput struct {
 func (c *Files) GetTemporaryUploadLink(in *GetTemporaryUploadLinkInput) (out *GetTemporaryUploadLinkOutput, err error) {
 	in.CommitInfo.checkMode()
 
-	body, _, err := c.download("/files/get_temporary_upload_link", in, nil)
+	body, err := c.call("/files/get_temporary_upload_link", in)
 	if err != nil {
 		return
 	}
