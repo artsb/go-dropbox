@@ -1,41 +1,6 @@
 package dropbox
 
-const (
-	// ErrTagOther tag name.
-	ErrTagOther = "other"
-	// ErrTagInternalError tag name.
-	ErrTagInternalError = "internal_error"
-	// ErrTagNotFound tag name.
-	ErrTagNotFound = "not_found"
-	// ErrTagNoPermission tag name.
-	ErrTagNoPermission = "no_permission"
-	// ErrTagNotFile tag name.
-	ErrTagNotFile = "not_file"
-	// ErrTagNotFolder tag name.
-	ErrTagNotFolder = "not_folder"
-	// ErrTagRestrictedContent tag name.
-	ErrTagRestrictedContent = "restricted_content"
-	// ErrTagUnsupportedContentType tag name.
-	ErrTagUnsupportedContentType = "unsupported_content_type"
-	// ErrTagFile tag name.
-	ErrTagFile = "file"
-	// ErrTagFolder tag name.
-	ErrTagFolder = "folder"
-	// ErrTagFileAncestor tag name.
-	ErrTagFileAncestor = "file_ancestor"
-	// ErrTagNoWritePermission tag name.
-	ErrTagNoWritePermission = "no_write_permission"
-	// ErrTagInsufficientSpace tag name.
-	ErrTagInsufficientSpace = "insufficient_space"
-	// ErrTagDisallowedName tag name.
-	ErrTagDisallowedName = "disallowed_name"
-	// ErrTagTeamFolder tag name.
-	ErrTagTeamFolder = "team_folder"
-	// ErrTagTooManyWriteOperations tag name.
-	ErrTagTooManyWriteOperations = "too_many_write_operations"
-	// ErrTagTooManyFiles tag name.
-	ErrTagTooManyFiles = "too_many_files"
-)
+import "fmt"
 
 // errorInfo Dropbox error info.
 type errorInfo struct {
@@ -55,15 +20,8 @@ type Error struct {
 
 // Error string.
 func (e *Error) Error() string {
-	return e.Summary
-}
-
-// IsNotFound if error NotFound returns true.
-func (e *Error) IsNotFound() bool {
-	return (e.Tag == ErrTagNotFound)
-}
-
-// IsNoPermission if error NoPermission returns true.
-func (e *Error) IsNoPermission() bool {
-	return (e.Tag == ErrTagNoPermission)
+	if e.StatusCode > 0 {
+		return fmt.Sprintf("dropbox: Status: %d (%s); Tag: %s; Summary: %s", e.StatusCode, e.Status, e.Tag, e.Summary)
+	}
+	return fmt.Sprintf("dropbox: Tag: %s; Summary: %s", e.Tag, e.Summary)
 }
